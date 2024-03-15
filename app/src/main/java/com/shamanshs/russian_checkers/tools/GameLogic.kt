@@ -32,6 +32,23 @@ object GameLogic {
         }
     }
 
+    fun resetField() {
+        for (x in 0..7) {
+            for (y in 0..7) {
+                playing_field[x][y] = 0
+            }
+        }
+    }
+
+    fun resetLogic() {
+        blackCount = 0
+        whiteCount = 0
+        turn = 1
+        id = -1
+        status = 0
+        youColor = 0
+    }
+
     fun fillField() {
         for (p in 0..63){
             var i: Int = p % 8

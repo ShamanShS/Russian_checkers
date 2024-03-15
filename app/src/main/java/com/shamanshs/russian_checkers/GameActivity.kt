@@ -15,7 +15,6 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.shamanshs.russian_checkers.databinding.ActivityGameBinding
-import com.shamanshs.russian_checkers.databinding.ActivityMainBinding
 import com.shamanshs.russian_checkers.tools.DataBaseModel
 import com.shamanshs.russian_checkers.tools.GameLogic
 import com.shamanshs.russian_checkers.tools.GameLogic.accessMove
@@ -34,6 +33,8 @@ import com.shamanshs.russian_checkers.tools.GameLogic.killMoveKing
 import com.shamanshs.russian_checkers.tools.GameLogic.moveField
 import com.shamanshs.russian_checkers.tools.GameLogic.playing_field
 import com.shamanshs.russian_checkers.tools.GameLogic.reset
+import com.shamanshs.russian_checkers.tools.GameLogic.resetField
+import com.shamanshs.russian_checkers.tools.GameLogic.resetLogic
 import com.shamanshs.russian_checkers.tools.GameLogic.status
 import com.shamanshs.russian_checkers.tools.GameLogic.turn
 import com.shamanshs.russian_checkers.tools.GameLogic.whiteCount
@@ -52,7 +53,7 @@ class GameActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityGameBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        gridIsSquare()
         if (id != -1) {
             val doc = Firebase.firestore.collection("Games").document(id.toString())
             onChangeListener(doc)
@@ -71,8 +72,24 @@ class GameActivity : AppCompatActivity() {
         }
         if (id == -1){
             fillField()
+            fillGameField()
         }
+        if (id == -1)
+            binding.textOver.setText("Turn ${if (turn == 1) "white" else "black"}")
+        if (youColor == -1 && id != -1){
+            status = 2
+            sendToDataBase()
+        }
+        if(status == 1)
+            binding.textOver.setText("Waiting for the player")
 
+    }
+
+
+    private fun gridIsSquare() {
+        val grid = binding.gridLayout2
+        val w = grid.layoutParams.width
+        grid.layoutParams.height = w
     }
 
     private fun fillGameField() {
@@ -253,11 +270,13 @@ class GameActivity : AppCompatActivity() {
             isOver()
             if (id != -1)
                 sendToDataBase()
+            binding.textOver.setText("Turn ${if (turn == 1) "white"
+                                            else "black"}")
         }
     }
 
     fun isOver() {
-        val t = findViewById<TextView>(R.id.coor)
+        val t = binding.textOver
         if (turn == -1) {
             if (blackCount == 0 || !canMoveBlack()) {
                 t.setText("Белые победили")
@@ -333,16 +352,10 @@ class GameActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("My Log", "onGameDestroy")
+        resetField()
+        resetLogic()
     }
 
-    fun go(view: View) {
-        if (status == 1 && youColor == -1){
-            status = 2
-            sendToDataBase()
-        }
-        fillGameField()
-    }
 
     private fun sendToDataBase(){
         convertToDataModel(dataGame)
@@ -359,6 +372,9 @@ class GameActivity : AppCompatActivity() {
                         if (dataGame != null) {
                             convertToGameModel(dataGame)
                             fillGameField()
+                            if (status != 1)
+                                binding.textOver.setText("Turn ${if (turn == 1) "white"
+                                                                    else "black"}")
                         }
                     }
                 }
